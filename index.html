@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kingdom Financial Services - Credit Repair Command Center</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #111118;
+  --bg-card-hover: #1a1a24;
+  --bg-surface: #0f0f18;
+  --border: #1e1e2e;
+  --border-active: #2a2a3e;
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8aa0;
+  --text-muted: #55556a;
+  --gold: #d4a853;
+  --gold-bright: #f5c842;
+  --gold-dark: #8b6914;
+  --silver: #b8b8cc;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #a78bfa;
+  --accent-green: #22c55e;
+  --accent-red: #ef4444;
+  --accent-orange: #f97316;
+  --accent-blue: #3b82f6;
+  --radius: 12px;
+  --shadow: 0 4px 32px rgba(0,0,0,0.5);
+  --glow-gold: 0 0 20px rgba(212,168,83,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height:100vh; overflow-x:hidden; }
+
+/* Three.js Canvas */
+#three-bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-active); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
+
+/* Top Nav */
+.topbar { position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); background:rgba(10,10,15,0.85); border-bottom:1px solid var(--border); padding:0.75rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+.topbar-left { display:flex; align-items:center; gap:1.5rem; }
+.logo-area { display:flex; align-items:center; gap:0.75rem; }
+.logo-img { height:40px; width:auto; filter: drop-shadow(0 0 8px rgba(212,168,83,0.3)); }
+.logo-text { display:flex; flex-direction:column; }
+.logo-text .brand { font-size:1.1rem; font-weight:800; letter-spacing:2px; background: linear-gradient(135deg, var(--gold-bright), var(--gold), var(--gold-dark)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.logo-text .sub { font-size:0.65rem; letter-spacing:3px; color: var(--text-muted); text-transform:uppercase; }
+.topbar-right { display:flex; align-items:center; gap:0.75rem; }
+
+/* Buttons */
+.btn { padding:0.45rem 1rem; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:0.8rem; transition:all 0.2s; display:inline-flex; align-items:center; gap:0.4rem; }
+.btn-gold { background:linear-gradient(135deg, var(--gold-bright), var(--gold)); color:#000; box-shadow:0 2px 12px rgba(212,168,83,0.2); }
+.btn-gold:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(212,168,83,0.35); }
+.btn-secondary { background:rgba(255,255,255,0.04); color:var(--text-secondary); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--gold-dark); color:var(--text-primary); }
+.btn-sm { padding:0.3rem 0.7rem; font-size:0.75rem; }
+
+/* Layout */
+.container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:2rem; }
+
+/* Hero / Logo Section */
+.hero { text-align:center; padding:3rem 0 2rem; position:relative; }
+.hero-logo { max-width:320px; height:auto; filter:drop-shadow(0 0 30px rgba(212,168,83,0.2)); margin-bottom:1rem; transition: transform 0.3s; }
+.hero-logo:hover { transform:scale(1.03); }
+.hero h1 { font-size:2rem; font-weight:800; letter-spacing:3px; margin-bottom:0.5rem; }
+.hero h1 span { background:linear-gradient(135deg, var(--gold-bright), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero .tagline { color:var(--text-secondary); font-size:0.9rem; letter-spacing:1px; }
+
+/* Client Switcher */
+.client-switcher { display:flex; align-items:center; gap:0.5rem; }
+.client-switcher select { background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:0.4rem 0.8rem; font-size:0.85rem; cursor:pointer; }
+
+/* Tabs */
+.tab-bar { display:flex; gap:0.25rem; margin-bottom:2rem; background:rgba(17,17,24,0.8); padding:0.35rem; border-radius:12px; border:1px solid var(--border); overflow-x:auto; backdrop-filter:blur(8px); }
+.tab { padding:0.6rem 1.1rem; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.82rem; color:var(--text-muted); transition:all 0.2s; white-space:nowrap; border:none; background:none; }
+.tab:hover { color:var(--text-secondary); background:var(--bg-surface); }
+.tab.active { background:linear-gradient(135deg, var(--gold-dark), var(--gold)); color:#000; box-shadow:0 2px 12px rgba(212,168,83,0.2); }
+.tab-content { display:none; }
+.tab-content.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* Score Cards */
+.score-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.25rem; margin-bottom:2rem; }
+.score-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; text-align:center; position:relative; overflow:hidden; transition:all 0.3s; }
+.score-card:hover { border-color:var(--border-active); transform:translateY(-2px); box-shadow:var(--shadow); }
+.score-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.score-card.tu::before { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+.score-card.ex::before { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
+.score-card.efx::before { background:linear-gradient(90deg,#ef4444,#f87171); }
+.score-card.target::before { background:linear-gradient(90deg,var(--accent-green),#4ade80); }
+.score-card .bureau { font-size:0.7rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-muted); margin-bottom:0.5rem; }
+.score-card .value { font-size:2.8rem; font-weight:800; line-height:1; }
+.score-card.tu .value { color:#60a5fa; }
+.score-card.ex .value { color:#a78bfa; }
+.score-card.efx .value { color:#f87171; }
+.score-card.target .value { color:var(--accent-green); }
+.score-card .label { font-size:0.7rem; color:var(--text-muted); margin-top:0.4rem; }
+
+/* Progress */
+.progress-container { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:2rem; overflow:hidden; position:relative; }
+.progress-container::after { content:''; position:absolute; top:0; right:0; width:200px; height:100%; background:radial-gradient(ellipse at right, rgba(212,168,83,0.05), transparent); pointer-events:none; }
+.progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.progress-title { font-weight:700; font-size:0.95rem; }
+.progress-pct { font-size:1.5rem; font-weight:800; background:linear-gradient(135deg, var(--gold-bright), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.progress-bar-outer { height:8px; background:var(--bg-surface); border-radius:4px; overflow:hidden; }
+.progress-bar-inner { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-bright)); transition:width 0.8s ease; box-shadow:0 0 12px rgba(212,168,83,0.3); }
+.progress-stats { display:flex; gap:2rem; margin-top:1rem; }
+.progress-stat { font-size:0.82rem; color:var(--text-secondary); }
+.progress-stat strong { color:var(--text-primary); }
+
+/* Phase Cards */
+.phase-list { display:flex; flex-direction:column; gap:1rem; }
+.phase-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:all 0.3s; }
+.phase-card:hover { border-color:var(--border-active); }
+.phase-card.completed { border-color:rgba(34,197,94,0.3); }
+.phase-card.active { border-color:rgba(212,168,83,0.4); box-shadow:var(--glow-gold); }
+.phase-header { padding:1.25rem 1.5rem; display:flex; align-items:center; gap:1rem; cursor:pointer; user-select:none; }
+.phase-header:hover { background:var(--bg-card-hover); }
+.phase-indicator { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0; }
+.phase-indicator.pending { background:var(--bg-surface); color:var(--text-muted); border:2px solid var(--border); }
+.phase-indicator.active { background:rgba(212,168,83,0.15); color:var(--gold); border:2px solid var(--gold); animation:pulse-ring 2s infinite; }
+.phase-indicator.completed { background:rgba(34,197,94,0.15); color:var(--accent-green); border:2px solid var(--accent-green); }
+@keyframes pulse-ring { 0%,100% { box-shadow:0 0 0 0 rgba(212,168,83,0.3); } 50% { box-shadow:0 0 0 6px rgba(212,168,83,0); } }
+.phase-info { flex:1; }
+.phase-title { font-weight:700; font-size:1rem; margin-bottom:0.2rem; }
+.phase-subtitle { font-size:0.78rem; color:var(--text-muted); }
+.phase-chevron { color:var(--text-muted); transition:transform 0.3s; font-size:1.2rem; }
+.phase-card.expanded .phase-chevron { transform:rotate(180deg); }
+.phase-body { display:none; padding:0 1.5rem 1.5rem; border-top:1px solid var(--border); }
+.phase-card.expanded .phase-body { display:block; animation:slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity:0; max-height:0; } to { opacity:1; max-height:3000px; } }
+
+/* Checklists */
+.checklist { list-style:none; margin:1rem 0; }
+.checklist-item { display:flex; align-items:flex-start; gap:0.75rem; padding:0.65rem 0; border-bottom:1px solid var(--border); cursor:pointer; transition:all 0.2s; }
+.checklist-item:hover { background:rgba(255,255,255,0.02); padding-left:0.5rem; }
+.checklist-item:last-child { border-bottom:none; }
+.check-box { width:20px; height:20px; border:2px solid var(--border-active); border-radius:5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; margin-top:2px; }
+.checklist-item.checked .check-box { background:var(--accent-green); border-color:var(--accent-green); }
+.checklist-item.checked .check-box::after { content:'\2713'; color:#fff; font-size:0.7rem; font-weight:800; }
+.checklist-item.checked .check-label { text-decoration:line-through; color:var(--text-muted); }
+.check-label { font-size:0.88rem; line-height:1.5; }
+
+/* Branches */
+.branch { margin:1rem 0; padding:1rem 1.25rem; background:var(--bg-surface); border-radius:8px; border-left:3px solid var(--gold); }
+.branch.success { border-left-color:var(--accent-green); }
+.branch.danger { border-left-color:var(--accent-red); }
+.branch.info { border-left-color:var(--accent-cyan); }
+.branch-label { font-weight:700; font-size:0.82rem; color:var(--gold); margin-bottom:0.4rem; }
+.branch.success .branch-label { color:var(--accent-green); }
+.branch.danger .branch-label { color:var(--accent-red); }
+.branch.info .branch-label { color:var(--accent-cyan); }
+.branch p { color:var(--text-secondary); font-size:0.85rem; line-height:1.6; }
+
+/* Tradeline Cards */
+.tradeline-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(350px,1fr)); gap:1.25rem; }
+.tradeline-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; transition:all 0.3s; }
+.tradeline-card:hover { border-color:var(--border-active); box-shadow:var(--shadow); }
+.tradeline-card.negative { border-left:3px solid var(--accent-red); }
+.tl-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.tl-name { font-weight:700; font-size:1rem; }
+.tl-badge { padding:0.2rem 0.6rem; border-radius:20px; font-size:0.7rem; font-weight:700; }
+.badge-red { background:rgba(239,68,68,0.15); color:var(--accent-red); }
+.badge-yellow { background:rgba(245,158,11,0.15); color:var(--gold); }
+.tl-details { font-size:0.85rem; color:var(--text-secondary); line-height:1.9; }
+.tl-details strong { color:var(--text-primary); }
+
+/* Decision Tree */
+.decision-tree-container { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:2rem; }
+.decision-question { background:var(--bg-surface); border:2px solid rgba(212,168,83,0.3); border-radius:var(--radius); padding:1.25rem; margin:1rem 0; cursor:pointer; transition:all 0.3s; }
+.decision-question:hover { border-color:var(--gold); transform:translateX(4px); box-shadow:var(--glow-gold); }
+.decision-question.selected { border-color:var(--accent-green); background:rgba(34,197,94,0.04); }
+.decision-answer { display:none; margin-left:1.5rem; padding:1rem 1.25rem; border-radius:8px; margin-bottom:0.75rem; font-size:0.88rem; line-height:1.6; animation:fadeIn 0.3s ease; }
+.decision-answer.show { display:block; }
+.decision-answer.good { background:rgba(34,197,94,0.06); border-left:3px solid var(--accent-green); color:#86efac; }
+.decision-answer.warn { background:rgba(212,168,83,0.06); border-left:3px solid var(--gold); color:#fde68a; }
+.decision-answer.bad { background:rgba(239,68,68,0.06); border-left:3px solid var(--accent-red); color:#fca5a5; }
+
+/* LetterStream Jobs */
+.lsw-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin:1rem 0; }
+.lsw-steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-top:1rem; }
+.lsw-step { background:var(--bg-surface); border-radius:8px; padding:1rem; text-align:center; border:1px solid var(--border); transition:all 0.2s; }
+.lsw-step:hover { border-color:var(--gold-dark); }
+.lsw-step-num { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg, var(--gold-bright), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.25rem; }
+.lsw-step-label { font-size:0.78rem; color:var(--text-muted); }
+.lsw-status { font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:20px; font-weight:600; }
+.lsw-status.draft { background:rgba(100,116,139,0.2); color:var(--text-secondary); }
+.lsw-status.sending { background:rgba(245,158,11,0.15); color:var(--gold); }
+.lsw-status.sent { background:rgba(34,197,94,0.15); color:var(--accent-green); }
+
+/* Table */
+.data-table { width:100%; border-collapse:collapse; margin:1rem 0; }
+.data-table th { padding:0.7rem 1rem; text-align:left; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); border-bottom:1px solid var(--border); }
+.data-table td { padding:0.7rem 1rem; border-bottom:1px solid var(--border); font-size:0.88rem; }
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table input, .data-table select { background:var(--bg-surface); border:1px solid var(--border); color:var(--text-primary); border-radius:5px; padding:0.3rem 0.5rem; font-size:0.8rem; width:100%; }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg-card); border:1px solid var(--gold-dark); border-radius:16px; padding:2rem; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; animation:modalIn 0.3s ease; box-shadow:0 0 40px rgba(212,168,83,0.1); }
+@keyframes modalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+.modal h3 { margin-bottom:1rem; font-size:1.2rem; color:var(--gold); }
+.modal label { display:block; margin-bottom:0.4rem; font-size:0.82rem; color:var(--text-secondary); font-weight:600; }
+.modal input, .modal textarea, .modal select { width:100%; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:0.6rem 0.8rem; color:var(--text-primary); font-size:0.88rem; margin-bottom:1rem; }
+.modal input:focus, .modal textarea:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 2px rgba(212,168,83,0.1); }
+
+/* Section headers */
+h2 { font-size:1.3rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem; }
+h2 .icon { color:var(--gold); }
+h3 { font-size:1rem; margin-bottom:1rem; color:var(--text-secondary); }
+.section-subtitle { color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem; }
+
+/* Responsive */
+@media (max-width:768px) {
+  .container { padding:1rem; }
+  .score-row { grid-template-columns:repeat(2,1fr); }
+  .tradeline-grid { grid-template-columns:1fr; }
+  .topbar { padding:0.5rem 1rem; flex-wrap:wrap; gap:0.5rem; }
+  .hero-logo { max-width:200px; }
+  .tab-bar { gap:0; }
+  .tab { padding:0.5rem 0.7rem; font-size:0.75rem; }
+}
+@media print { body { background:#fff; color:#000; } .topbar,.tab-bar,.btn,#three-bg { display:none; } .phase-body { display:block !important; } .score-card { border:1px solid #ccc; } }
+</style>
+</head>
+<body>
+
+<!-- Three.js Background -->
+<canvas id="three-bg"></canvas>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-area">
+      <img src="logo.png" class="logo-img" alt="KFS" onerror="this.style.display='none'">
+      <div class="logo-text">
+        <span class="brand">KINGDOM</span>
+        <span class="sub">Financial Services</span>
+      </div>
+    </div>
+    <div class="client-switcher">
+      <select id="clientSelect" onchange="switchClient(this.value)">
+        <option value="duran">JELFFERY N DURAN</option>
+      </select>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-secondary btn-sm" onclick="exportData()">&#128229; Export</button>
+    <button class="btn btn-secondary btn-sm" onclick="importData()">&#128228; Import</button>
+    <button class="btn btn-secondary btn-sm" onclick="window.print()">&#128424; Print</button>
+    <button class="btn btn-gold btn-sm" onclick="openNewClientModal()">+ New Client</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="container" id="app"></div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<!-- New Client Modal -->
+<div class="modal-overlay" id="newClientModal">
+  <div class="modal">
+    <h3>&#9812; Onboard New Client</h3>
+    <label>Full Name</label>
+    <input type="text" id="newName" placeholder="JOHN A DOE">
+    <label>Address</label>
+    <input type="text" id="newAddr" placeholder="123 MAIN ST, CITY, ST 00000">
+    <label>Report Date</label>
+    <input type="date" id="newDate">
+    <label>Scores (TU / EX / EFX)</label>
+    <div style="display:flex;gap:0.5rem">
+      <input type="number" id="newTU" placeholder="TU">
+      <input type="number" id="newEX" placeholder="EX">
+      <input type="number" id="newEFX" placeholder="EFX">
+    </div>
+    <label>Negative Items (one per line: Creditor | Amount | Type)</label>
+    <textarea id="newNegatives" rows="4" placeholder="Capital One | $6,601 | Charge-Off"></textarea>
+    <label>Target Score</label>
+    <input type="number" id="newTarget" placeholder="720" value="720">
+    <div style="display:flex;gap:0.75rem;margin-top:1rem">
+      <button class="btn btn-gold" onclick="addNewClient()">Create Client</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== THREE.JS KINGDOM BACKGROUND ====================
+(function() {
+  const canvas = document.getElementById('three-bg');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 30;
+
+  // Particle system - golden floating particles
+  const particleCount = 200;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const velocities = new Float32Array(particleCount * 3);
+
+  for (let i = 0; i < particleCount * 3; i += 3) {
+    positions[i] = (Math.random()-0.5) * 60;
+    positions[i+1] = (Math.random()-0.5) * 60;
+    positions[i+2] = (Math.random()-0.5) * 30 - 10;
+    velocities[i] = (Math.random()-0.5) * 0.01;
+    velocities[i+1] = Math.random() * 0.02 + 0.005;
+    velocities[i+2] = 0;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: 0xd4a853,
+    size: 0.08,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending
+  });
+
+  const particles = new THREE.Points(geometry, material);
+  scene.add(particles);
+
+  // Floating crown geometry (wireframe)
+  const crownGeo = new THREE.TorusGeometry(3, 0.3, 8, 6);
+  const crownMat = new THREE.MeshBasicMaterial({ color:0xd4a853, wireframe:true, transparent:true, opacity:0.06 });
+  const crown = new THREE.Mesh(crownGeo, crownMat);
+  crown.position.set(15, 8, -15);
+  scene.add(crown);
+
+  // Floating orbs
+  for (let i = 0; i < 5; i++) {
+    const orbGeo = new THREE.SphereGeometry(0.5 + Math.random()*0.5, 16, 16);
+    const orbMat = new THREE.MeshBasicMaterial({ color:0xd4a853, wireframe:true, transparent:true, opacity:0.04 });
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    orb.position.set((Math.random()-0.5)*40, (Math.random()-0.5)*40, -20 + Math.random()*10);
+    orb.userData = { speed: 0.002 + Math.random()*0.005, offset: Math.random()*Math.PI*2 };
+    scene.add(orb);
+  }
+
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => { mouseX = (e.clientX/window.innerWidth - 0.5)*2; mouseY = (e.clientY/window.innerHeight - 0.5)*2; });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const pos = geometry.attributes.position.array;
+    for (let i = 0; i < particleCount*3; i+=3) {
+      pos[i] += velocities[i];
+      pos[i+1] += velocities[i+1];
+      if (pos[i+1] > 30) { pos[i+1] = -30; pos[i] = (Math.random()-0.5)*60; }
+    }
+    geometry.attributes.position.needsUpdate = true;
+    crown.rotation.y += 0.003;
+    crown.rotation.x += 0.001;
+    camera.position.x += (mouseX*2 - camera.position.x) * 0.02;
+    camera.position.y += (-mouseY*2 - camera.position.y) * 0.02;
+    camera.lookAt(scene.position);
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+// ==================== DATABASE (localStorage + IndexedDB fallback) ====================
+const DB = {
+  save(key, val) { try { localStorage.setItem('kfs_'+key, JSON.stringify(val)); } catch(e) { console.warn('Storage full'); } },
+  load(key, def) { try { const v = localStorage.getItem('kfs_'+key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
+  del(key) { localStorage.removeItem('kfs_'+key); }
+};
+
+// ==================== CLIENT DATA (TEMPLATE) ====================
+const TEMPLATE_PHASES = [
+  {
+    id:"prep", title:"Preparation & Document Gathering", subtitle:"Get everything ready before mailing", checklist:[
+      {id:"prep-1",label:"Download/scan government-issued photo ID (driver's license or passport)"},
+      {id:"prep-2",label:"Download recent utility bill or bank statement (proof of address, dated within 30 days)"},
+      {id:"prep-3",label:"Generate PDF dispute letters for all negative items"},
+      {id:"prep-4",label:"Generate CSV address files for LetterStream upload"},
+      {id:"prep-5",label:"Create LetterStream account at letterstream.com (if not already done)"},
+      {id:"prep-6",label:"Add payment method to LetterStream account"},
+      {id:"prep-7",label:"Review each letter PDF for accuracy before mailing"}
+    ]
+  },
+  {
+    id:"send", title:"Send Dispute Letters via LetterStream", subtitle:"Certified Mail with tracking", checklist:[
+      {id:"send-1",label:"Upload each PDF to LetterStream as 'Send Letters' job"},
+      {id:"send-2",label:"Select 'My PDF Document' as recipient source"},
+      {id:"send-3",label:"Enable USPS First-Class + Certified Mail (+ Return Receipt if available)"},
+      {id:"send-4",label:"Submit all jobs and record certified tracking numbers"},
+      {id:"send-5",label:"Set calendar/phone reminder: 35 days from mail date"}
+    ]
+  },
+  {
+    id:"track", title:"Track Delivery & Bureau Response", subtitle:"Monitor delivery, then wait 30-day investigation window", checklist:[
+      {id:"track-1",label:"Confirm all letters delivered (LetterStream + USPS tracking)"},
+      {id:"track-2",label:"Wait 30 days from confirmed delivery for bureau responses"},
+      {id:"track-3",label:"Open each bureau response letter when received"},
+      {id:"track-4",label:"Record result for each: Deleted / Verified / No Response"},
+      {id:"track-5",label:"IF deleted: Pull fresh report to confirm removal"},
+      {id:"track-6",label:"IF verified: Move to Phase 4 (Method of Verification)"},
+      {id:"track-7",label:"IF missed deadline: Send Failure to Investigate letter"}
+    ]
+  },
+  {
+    id:"mov", title:"Method of Verification (MOV)", subtitle:"Force bureaus to explain HOW they verified", checklist:[
+      {id:"mov-1",label:"Draft MOV letter for each verified (not deleted) tradeline"},
+      {id:"mov-2",label:"Ask: WHAT procedure, WHO was contacted, WHAT documents reviewed"},
+      {id:"mov-3",label:"Send MOV letters via LetterStream (Certified Mail)"},
+      {id:"mov-4",label:"IF vague response ('e-OSCAR'): Escalate to Phase 5"},
+      {id:"mov-5",label:"IF details provided: Check for errors, send 2nd targeted dispute"}
+    ]
+  },
+  {
+    id:"escalate", title:"Direct Creditor + CFPB Escalation", subtitle:"Attack from the other side + regulatory pressure", checklist:[
+      {id:"esc-1",label:"Call creditor directly - demand correction/deletion of inaccurate info"},
+      {id:"esc-2",label:"Demand debt validation under FDCPA Section 809 (collections only)"},
+      {id:"esc-3",label:"File CFPB complaint at consumerfinance.gov/complaint"},
+      {id:"esc-4",label:"Send direct-to-furnisher dispute letter (Certified Mail) citing FCRA 1681s-2"},
+      {id:"esc-5",label:"Negotiate pay-for-delete if needed (30-50% of balance)"},
+      {id:"esc-6",label:"If unresolved after 90 days: consult FCRA attorney (many work contingency)"}
+    ]
+  },
+  {
+    id:"maintain", title:"Maintenance & Score Building", subtitle:"Keep positives strong, monitor for re-reporting", checklist:[
+      {id:"maint-1",label:"Set autopay on ALL positive accounts"},
+      {id:"maint-2",label:"Pull TransUnion via Credit Karma monthly (free)"},
+      {id:"maint-3",label:"Pull ALL 3 at AnnualCreditReport.com every 4 months"},
+      {id:"maint-4",label:"Watch for re-reporting of deleted items (send reinsertion letter if found)"},
+      {id:"maint-5",label:"Consider adding secured card (reports as true bankcard)"}
+    ]
+  }
+];
+
+const CLIENTS = {
+  duran: {
+    name:"JELFFERY N DURAN", address:"14 MIDLAND AV APT 1A, KEARNY, NJ 07032",
+    reportDate:"2026-07-06",
+    scores:{tu:633,ex:648,efx:620}, targetScore:720,
+    negatives:[
+      {id:"capone",creditor:"Capital One",account:"517805XXXXXX",amount:"$6,601",type:"Charge-Off",rating:"9 (Collection/Charge-Off)",bureaus:["TransUnion","Experian","Equifax"],lates:"3x30, 2x60, 8x90",strategy:"Timeline contradictions: charge-off predates first delinquency. 'Previously disputed - resolved' comment. Payment dates after charge-off.",impact:"+40 to +70 pts",letters:["01-CapitalOne-TU.pdf","02-CapitalOne-EX.pdf","03-CapitalOne-EFX.pdf"],result:{tu:"pending",ex:"pending",efx:"pending"}},
+      {id:"progressive",creditor:"Progressive / CCS",account:"212124XX",amount:"$65",type:"Collection",rating:"9 (Collection)",bureaus:["TransUnion","Experian","Equifax"],lates:"N/A",strategy:"All 3 bureaus report differently (collection/charge-off/refinanced). Blank creditor on EFX. Debt validation demand under FDCPA.",impact:"+15 to +25 pts",letters:["04-CCS-TU.pdf","05-CCS-EX.pdf","06-CCS-EFX.pdf"],result:{tu:"pending",ex:"pending",efx:"pending"}},
+      {id:"klarna",creditor:"Klarna",account:"INA3VMXXXXXXXXXXXX",amount:"$0",type:"30-Day Late (erroneous)",rating:"2 (30 Days Late)",bureaus:["TransUnion"],lates:"Payment pattern shows ALL current (CCCCCC)",strategy:"Payment pattern directly contradicts 30-day late rating. $0 balance, paid in full. Easiest win.",impact:"+10 to +20 pts",letters:["07-Klarna-TU.pdf"],result:{tu:"pending"}}
+    ],
+    letterStreamJobs:[
+      {num:1,target:"Capital One - TU",status:"draft"},
+      {num:2,target:"Capital One - EX",status:"draft"},
+      {num:3,target:"Capital One - EFX",status:"draft"},
+      {num:4,target:"CCS - TU",status:"draft"},
+      {num:5,target:"CCS - EX",status:"draft"},
+      {num:6,target:"CCS - EFX",status:"draft"},
+      {num:7,target:"Klarna - TU",status:"draft"}
+    ],
+    tracking:[
+      {letter:"01",desc:"Cap One TU"},{letter:"02",desc:"Cap One EX"},{letter:"03",desc:"Cap One EFX"},
+      {letter:"04",desc:"CCS TU"},{letter:"05",desc:"CCS EX"},{letter:"06",desc:"CCS EFX"},{letter:"07",desc:"Klarna TU"}
+    ]
+  }
+};
+
+let currentClient = "duran";
+
+// ==================== RENDER ====================
+function render() {
+  const c = CLIENTS[currentClient];
+  const phases = c.phases || TEMPLATE_PHASES;
+  const totalChecks = phases.reduce((a,p) => a + p.checklist.length, 0);
+  const doneChecks = phases.reduce((a,p) => a + p.checklist.filter(i => DB.load(i.id, false)).length, 0);
+  const pct = totalChecks ? Math.round((doneChecks/totalChecks)*100) : 0;
+  const activeIdx = phases.findIndex(p => p.checklist.some(i => !DB.load(i.id, false)));
+
+  document.getElementById('app').innerHTML = `
+    <div class="hero">
+      <img src="logo.png" class="hero-logo" alt="Kingdom Financial Services" onerror="this.style.display='none'">
+      <h1><span>KINGDOM</span> CREDIT REPAIR</h1>
+      <p class="tagline">Command Center &mdash; ${c.name} &mdash; Report: ${c.reportDate}</p>
+    </div>
+
+    <div class="score-row">
+      <div class="score-card tu"><div class="bureau">TransUnion</div><div class="value">${c.scores.tu}</div><div class="label">VantageScore 3.0</div></div>
+      <div class="score-card ex"><div class="bureau">Experian</div><div class="value">${c.scores.ex}</div><div class="label">VantageScore 3.0</div></div>
+      <div class="score-card efx"><div class="bureau">Equifax</div><div class="value">${c.scores.efx}</div><div class="label">VantageScore 3.0</div></div>
+      <div class="score-card target"><div class="bureau">Target</div><div class="value">${c.targetScore}</div><div class="label">Goal Score</div></div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-header">
+        <span class="progress-title">Campaign Progress</span>
+        <span class="progress-pct">${pct}%</span>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div>
+      <div class="progress-stats">
+        <span class="progress-stat"><strong>${doneChecks}</strong> of ${totalChecks} steps complete</span>
+        <span class="progress-stat"><strong>${c.negatives.length}</strong> negative items targeted</span>
+        <span class="progress-stat"><strong>${pct >= 100 ? 'Complete' : 'Phase ' + (activeIdx+1 > 0 ? activeIdx+1 : 1) + ' active'}</strong></span>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('phases',this)">&#9881; Phases</button>
+      <button class="tab" onclick="switchTab('negatives',this)">&#9888; Negatives</button>
+      <button class="tab" onclick="switchTab('letterstream',this)">&#9993; LetterStream</button>
+      <button class="tab" onclick="switchTab('tracking',this)">&#128228; Tracking</button>
+      <button class="tab" onclick="switchTab('decisions',this)">&#10068; Decisions</button>
+      <button class="tab" onclick="switchTab('scores',this)">&#128200; Analysis</button>
+    </div>
+
+    <div class="tab-content active" id="tab-phases">
+      <h2><span class="icon">&#9881;</span> Action Plan Roadmap</h2>
+      <div class="phase-list">
+        ${phases.map((phase,pi) => {
+          const phaseDone = phase.checklist.filter(i => DB.load(i.id,false)).length;
+          const isComplete = phaseDone === phase.checklist.length;
+          const isActive = pi === activeIdx;
+          const status = isComplete ? 'completed' : (isActive ? 'active' : 'pending');
+          return `<div class="phase-card ${status} ${DB.load('expand-'+phase.id,false)?'expanded':''}" id="phase-${phase.id}">
+            <div class="phase-header" onclick="togglePhase('${phase.id}')">
+              <div class="phase-indicator ${status}">${isComplete?'&#10003;':pi+1}</div>
+              <div class="phase-info"><div class="phase-title">${phase.title}</div><div class="phase-subtitle">${phase.subtitle} &mdash; ${phaseDone}/${phase.checklist.length}</div></div>
+              <span class="phase-chevron">&#9662;</span>
+            </div>
+            <div class="phase-body"><ul class="checklist">${phase.checklist.map(item=>`
+              <li class="checklist-item ${DB.load(item.id,false)?'checked':''}" onclick="toggleCheck('${item.id}')">
+                <div class="check-box"></div><span class="check-label">${item.label}</span>
+              </li>`).join('')}</ul>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-negatives">
+      <h2><span class="icon">&#9888;</span> Negative Items Targeted</h2>
+      <div class="tradeline-grid">
+        ${c.negatives.map(n=>`<div class="tradeline-card negative">
+          <div class="tl-top"><span class="tl-name">${n.creditor}</span><span class="tl-badge badge-red">${n.amount}</span></div>
+          <div class="tl-details">
+            <strong>Type:</strong> ${n.type}<br><strong>Account:</strong> ${n.account}<br>
+            <strong>Rating:</strong> ${n.rating}<br><strong>Bureaus:</strong> ${n.bureaus.join(', ')}<br>
+            <strong>Lates:</strong> ${n.lates}<br><strong>Strategy:</strong> ${n.strategy}<br>
+            <strong>Impact:</strong> ${n.impact}<br>
+            <strong>Letters:</strong> ${n.letters.join(', ')}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-letterstream">
+      <h2><span class="icon">&#9993;</span> LetterStream Mailing Jobs</h2>
+      <p class="section-subtitle">Create jobs at <a href="https://www.letterstream.com/ls/newjob?letter" target="_blank" style="color:var(--gold)">letterstream.com</a> &mdash; Certified Mail for every letter.</p>
+      <div class="lsw-steps">
+        <div class="lsw-step"><div class="lsw-step-num">1</div><div class="lsw-step-label">Send Letters</div></div>
+        <div class="lsw-step"><div class="lsw-step-num">2</div><div class="lsw-step-label">My PDF Document</div></div>
+        <div class="lsw-step"><div class="lsw-step-num">3</div><div class="lsw-step-label">Upload PDF</div></div>
+        <div class="lsw-step"><div class="lsw-step-num">4</div><div class="lsw-step-label">Certified Mail</div></div>
+        <div class="lsw-step"><div class="lsw-step-num">5</div><div class="lsw-step-label">Submit & Track</div></div>
+      </div>
+      <h3 style="margin-top:2rem">Job Status</h3>
+      ${c.letterStreamJobs.map(j=>`<div class="lsw-card" style="padding:1rem 1.25rem"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:0.75rem"><span style="background:var(--bg-surface);padding:0.3rem 0.7rem;border-radius:6px;font-weight:800;font-size:0.82rem;color:var(--gold)">#${j.num}</span><span style="font-weight:600">${j.target}</span></div><div style="display:flex;align-items:center;gap:0.5rem"><span class="lsw-status ${DB.load('lsw-'+j.num,'draft')}">${DB.load('lsw-'+j.num,'draft').toUpperCase()}</span><select onchange="updateLSW(${j.num},this.value)" style="background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);border-radius:5px;padding:0.2rem 0.4rem;font-size:0.75rem"><option value="draft"${DB.load('lsw-'+j.num,'draft')==='draft'?' selected':''}>Draft</option><option value="sending"${DB.load('lsw-'+j.num,'draft')==='sending'?' selected':''}>Sending</option><option value="sent"${DB.load('lsw-'+j.num,'draft')==='sent'?' selected':''}>Sent</option></select></div></div></div>`).join('')}
+    </div>
+
+    <div class="tab-content" id="tab-tracking">
+      <h2><span class="icon">&#128228;</span> Certified Mail Tracking</h2>
+      <table class="data-table"><thead><tr><th>#</th><th>Letter</th><th>Certified #</th><th>Sent</th><th>Received</th><th>Result</th></tr></thead><tbody>
+        ${c.tracking.map(t=>`<tr>
+          <td>${t.letter}</td><td>${t.desc}</td>
+          <td><input value="${DB.load('trk-'+t.letter+'-cert','')}" onchange="updateTrk('${t.letter}','cert',this.value)" placeholder="Tracking #"></td>
+          <td><input value="${DB.load('trk-'+t.letter+'-sent','')}" onchange="updateTrk('${t.letter}','sent',this.value)" placeholder="M/D"></td>
+          <td><input value="${DB.load('trk-'+t.letter+'-recv','')}" onchange="updateTrk('${t.letter}','recv',this.value)" placeholder="M/D"></td>
+          <td><select onchange="updateTrk('${t.letter}','result',this.value)"><option value="">--</option><option value="Deleted"${DB.load('trk-'+t.letter+'-result','')==='Deleted'?' selected':''}>Deleted</option><option value="Updated"${DB.load('trk-'+t.letter+'-result','')==='Updated'?' selected':''}>Updated</option><option value="Verified"${DB.load('trk-'+t.letter+'-result','')==='Verified'?' selected':''}>Verified</option><option value="No Response"${DB.load('trk-'+t.letter+'-result','')==='No Response'?' selected':''}>No Response</option></select></td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>
+
+    <div class="tab-content" id="tab-decisions">
+      <h2><span class="icon">&#10068;</span> "What Do I Do When..." Decision Tree</h2>
+      <p class="section-subtitle">Click any scenario to see your next action.</p>
+      <div class="decision-tree-container" id="decisionTree"></div>
+    </div>
+
+    <div class="tab-content" id="tab-scores">
+      <h2><span class="icon">&#128200;</span> Score Impact Analysis</h2>
+      <table class="data-table"><thead><tr><th>Action</th><th>Est. Gain</th><th>Bureaus</th><th>Difficulty</th></tr></thead><tbody>
+        <tr><td>Delete Capital One charge-off ($6,601)</td><td>+40 to +70</td><td>All 3</td><td style="color:var(--accent-orange)">Medium</td></tr>
+        <tr><td>Delete Progressive/CCS collection ($65)</td><td>+15 to +25</td><td>All 3</td><td style="color:var(--accent-green)">Easy</td></tr>
+        <tr><td>Fix Klarna 30-day late</td><td>+10 to +20</td><td>TU only</td><td style="color:var(--accent-green)">Easy</td></tr>
+        <tr><td style="font-weight:700">Total potential</td><td style="font-weight:700;color:var(--accent-green)">+65 to +115</td><td></td><td></td></tr>
+      </tbody></table>
+      <div class="branch info"><div class="branch-label">Key Score Factors Being Attacked</div>
+        <p style="line-height:2">
+        &bull; "Too many derogatory accounts" &rarr; <strong>FIXED by Cap One + CCS removal</strong><br>
+        &bull; "Derogatory balances too high" &rarr; <strong>FIXED: $6,601 = 52% of total balance</strong><br>
+        &bull; "No open bankcard accounts" &rarr; Consider secured card (reports as bankcard)<br>
+        &bull; "Too many revolving with derogatory status" &rarr; Fixed when Cap One removed<br>
+        &bull; "Oldest account too recent" &rarr; Time-based, improves naturally
+        </p>
+      </div>
+    </div>
+  `;
+
+  renderDecisionTree();
+}
+
+// ==================== DECISIONS ====================
+function renderDecisionTree() {
+  const decisions = [
+    {q:"Bureau DELETES the item",a:[{t:"good",x:"Pull fresh report in 2 weeks to confirm. Save deletion letter as permanent record."},{t:"warn",x:"Check again in 6 months - deleted items sometimes get re-reported."}]},
+    {q:"Bureau says 'VERIFIED' (not deleted)",a:[{t:"warn",x:"Send Method of Verification letter within 5 business days."},{t:"warn",x:"Demand: WHAT procedure, WHO contacted, WHAT docs reviewed."},{t:"bad",x:"Don't accept 'e-OSCAR' as adequate - it's not a reasonable procedure under FCRA."}]},
+    {q:"Bureau MISSES the 30-day deadline",a:[{t:"good",x:"Item MUST be deleted under FCRA 1681i(a)(1)."},{"t":"warn",x:"Send 'Failure to Investigate' letter immediately."},{"t":"warn",x:"If still not deleted in 15 more days, file CFPB complaint."}]},
+    {q:"MOV response says 'e-OSCAR' or vague",a:[{t:"bad",x:"Not adequate under 1681i(a)(7)."},{"t":"warn",x:"Send escalation letter + CFPB complaint threat if not deleted in 15 days."}]},
+    {q:"Item REAPPEARS after deletion",a:[{t:"bad",x:"FCRA 1681i(a)(5)(B) violation. Must notify you BEFORE reinserting."},{"t":"warn",x:"Send 'Reinsertion Without Notice' letter + CFPB complaint."}]},
+    {q:"Capital One won't delete",a:[{t:"warn",x:"Negotiate pay-for-delete: offer 30-50% (~$2,000-$3,300)."},{"t":"warn",x:"Get agreement IN WRITING before paying."},{"t":"bad",x:"If all else fails: consult FCRA attorney (contingency basis)."}]},
+    {q:"CCS/Progressive won't validate",a:[{t:"good",x:"Can't report what they can't validate (FDCPA 809)."},{"t":"warn",x:"All 3 bureaus report it differently - use this."},{"t":"warn",x:"Send FDCPA cease communication demand if harassment continues."}]},
+    {q:"Klarna won't fix the 30-day late",a:[{t:"good",x:"Payment pattern CCCCCC PROVES all current. Strongest case."},{"t":"warn",x:"2nd dispute to TU quoting payment data vs. rating code."},{"t":"warn",x:"Call Klarna at 888-518-2771 to dispute directly."}]},
+    {q:"Nothing works after 90+ days",a:[{t:"bad",x:"Consult FCRA attorney (many work contingency)."},{"t":"warn",x:"Document EVERYTHING: letters, receipts, responses, calls."},{"t":"warn",x:"FCRA violations: $100-$1,000 per violation + attorney fees."}]}
+  ];
+  const el = document.getElementById('decisionTree');
+  if (!el) return;
+  el.innerHTML = decisions.map((d,i)=>`<div class="decision-question" onclick="toggleDecision(${i})" id="dq-${i}"><strong>IF</strong> ${d.q}</div><div id="da-${i}" style="display:none">${d.a.map(a=>`<div class="decision-answer ${a.t} show">${a.x}</div>`).join('')}</div>`).join('');
+}
+
+function toggleDecision(i) {
+  const el = document.getElementById('da-'+i);
+  const qEl = document.getElementById('dq-'+i);
+  document.querySelectorAll('[id^="da-"]').forEach(e=>e.style.display='none');
+  document.querySelectorAll('[id^="dq-"]').forEach(e=>e.classList.remove('selected'));
+  if (el.style.display === 'none') { el.style.display='block'; qEl.classList.add('selected'); }
+}
+
+// ==================== INTERACTIONS ====================
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function toggleCheck(id) { DB.save(id, !DB.load(id,false)); render(); }
+function togglePhase(id) { DB.save('expand-'+id, !DB.load('expand-'+id,false)); render(); }
+function updateLSW(n,v) { DB.save('lsw-'+n,v); }
+function updateTrk(l,f,v) { DB.save('trk-'+l+'-'+f,v); }
+function switchClient(v) { currentClient=v; render(); }
+function openNewClientModal() { document.getElementById('newClientModal').classList.add('show'); }
+function closeModal() { document.getElementById('newClientModal').classList.remove('show'); }
+
+function addNewClient() {
+  const name = document.getElementById('newName').value.toUpperCase().trim();
+  if (!name) { alert('Name required'); return; }
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  CLIENTS[slug] = {
+    name, address: document.getElementById('newAddr').value,
+    reportDate: document.getElementById('newDate').value || new Date().toISOString().slice(0,10),
+    scores: { tu:parseInt(document.getElementById('newTU').value)||0, ex:parseInt(document.getElementById('newEX').value)||0, efx:parseInt(document.getElementById('newEFX').value)||0 },
+    targetScore: parseInt(document.getElementById('newTarget').value)||720,
+    negatives: (document.getElementById('newNegatives').value||'').split('\n').filter(Boolean).map((line,i) => {
+      const [cred,amt,type] = line.split('|').map(s=>s.trim());
+      return {id:'neg-'+i,creditor:cred||'Unknown',account:'',amount:amt||'$0',type:type||'Dispute',rating:'',bureaus:['All'],lates:'',strategy:'Custom dispute letter needed',impact:'Pending assessment',letters:[],result:{}};
+    }),
+    letterStreamJobs:[{num:1,target:'Dispute Letters',status:'draft'}],
+    tracking:[{letter:'01',desc:'Initial dispute'}]
+  };
+  const sel = document.getElementById('clientSelect');
+  const o = document.createElement('option'); o.value=slug; o.textContent=name;
+  sel.appendChild(o); sel.value=slug; currentClient=slug;
+  closeModal(); render();
+}
+
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('kfs_')) data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `kfs-credit-repair-${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+
+function importData() { document.getElementById('importFile').click(); }
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      Object.entries(data).forEach(([k,v]) => localStorage.setItem(k,v));
+      alert('Data imported successfully!'); render();
+    } catch(err) { alert('Invalid file format'); }
+  };
+  reader.readAsText(file);
+}
+
+// ==================== INIT ====================
+render();
+</script>
+</body>
+</html>
